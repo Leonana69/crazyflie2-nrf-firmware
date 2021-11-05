@@ -44,9 +44,8 @@ static char dummy;
 
 int error = 0;
 
-void UART0_IRQHandler()
-{
-  int nhead = head+1;
+void UART0_IRQHandler() {
+  int nhead = head + 1;
 
   //if (NRF_UART0->ERRORSRC) {
   //  error = NRF_UART0->ERRORSRC;
@@ -69,22 +68,21 @@ void UART0_IRQHandler()
   if (head >= Q_LENGTH) head = 0;
 }
 
-void uartInit()
-{
+void uartInit() {
   NRF_GPIO->PIN_CNF[8] &= ~GPIO_PIN_CNF_PULL_Msk;
-  NRF_GPIO->PIN_CNF[8] |= (GPIO_PIN_CNF_PULL_Pulldown<<GPIO_PIN_CNF_PULL_Pos);
+  NRF_GPIO->PIN_CNF[8] |= (GPIO_PIN_CNF_PULL_Pulldown << GPIO_PIN_CNF_PULL_Pos);
 
   NRF_GPIO->PIN_CNF[UART_TX_PIN] = (NRF_GPIO->PIN_CNF[UART_TX_PIN] & (~GPIO_PIN_CNF_DRIVE_Msk)) | (GPIO_PIN_CNF_DRIVE_S0S1<<GPIO_PIN_CNF_DRIVE_Pos);
 
-  NRF_GPIO->DIRSET = 1<<UART_TX_PIN;
-  NRF_GPIO->OUTSET = 1<<UART_TX_PIN;
+  NRF_GPIO->DIRSET = 1 << UART_TX_PIN;
+  NRF_GPIO->OUTSET = 1 << UART_TX_PIN;
   NRF_UART0->PSELTXD = UART_TX_PIN;
 
-  NRF_GPIO->DIRCLR = 1<<UART_RX_PIN;
+  NRF_GPIO->DIRCLR = 1 << UART_RX_PIN;
   NRF_UART0->PSELRXD = UART_RX_PIN;
 
-  NRF_GPIO->DIRSET = 1<<UART_RTS_PIN;
-  NRF_GPIO->OUTSET = 1<<UART_RTS_PIN;
+  NRF_GPIO->DIRSET = 1 << UART_RTS_PIN;
+  NRF_GPIO->OUTSET = 1 << UART_RTS_PIN;
   NRF_UART0->PSELRTS = UART_RTS_PIN;
 
   NRF_UART0->CONFIG = UART_CONFIG_HWFC_Msk;
@@ -109,8 +107,7 @@ void uartInit()
   isInit = true;
 }
 
-void uartDeinit()
-{
+void uartDeinit() {
   NRF_UART0->TASKS_STOPRX = 1;
   NRF_UART0->TASKS_STOPTX = 1;
   NRF_UART0->ENABLE = 0;
@@ -121,56 +118,47 @@ void uartDeinit()
   isInit = false;
 }
 
-void uartPuts(char* string)
-{
+void uartPuts(char* string) {
   if (!isInit)
-      return;
+    return;
 
-  while(*string)
-  {
+  while (*string)
     uartPutc(*string++);
-  }
 }
 
-void uartSend(char* data, int len)
-{
+void uartSend(char* data, int len) {
   if (!isInit)
-      return;
+    return;
 
-  while(len--)
-  {
+  while (len--)
     uartPutc(*data++);
-  }
 }
 
-void uartPutc(char c)
-{
+void uartPutc(char c) {
   if (!isInit)
-      return;
+    return;
 
   NRF_UART0->TXD = c;
   while(!NRF_UART0->EVENTS_TXDRDY);
   NRF_UART0->EVENTS_TXDRDY=0;
 }
 
-bool uartIsDataReceived()
-{
+bool uartIsDataReceived() {
   if (!isInit)
-      return false;
+    return false;
 
-  return head!=tail;
+  return head != tail;
 }
 
-char uartGetc()
-{
-  char c=0;
+char uartGetc() {
+  char c = 0;
 
   if (!isInit)
-      return c;
+    return c;
 
   // TODO: Add overrun check
 
-  if (head!=tail) {
+  if (head != tail) {
     c = rxq[tail++];
     if (tail >= Q_LENGTH) tail = 0;
   }

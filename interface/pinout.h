@@ -31,6 +31,7 @@
 #else
 #define UART_RX_PIN 12
 #define UART_TX_PIN 11
+#define UART_RTS_PIN 14
 #endif
 
 /* Rev. B prototype is patched to switch PM_CHG and PM_ISET

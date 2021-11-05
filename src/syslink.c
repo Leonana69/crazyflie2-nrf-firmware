@@ -53,27 +53,23 @@ void syslinkReset() {
   state = state_first_start;
 }
 
-bool syslinkReceive(struct syslinkPacket *packet)
-{
-  static int step=0;
-  static int length=0;
-  static uint8_t cksum_a=0, cksum_b=0;
+bool syslinkReceive(struct syslinkPacket *packet) {
+  static int step = 0;
+  static int length = 0;
+  static uint8_t cksum_a = 0, cksum_b = 0;
   char c;
 
   packet->length = 0;
 
-  if (state == state_done)
-  {
+  if (state == state_done) {
     state = state_first_start;
     step = 0;
   }
 
-  while (uartIsDataReceived() && (state != state_done))
-  {
+  while (uartIsDataReceived() && (state != state_done)) {
     c = uartGetc();
 
-    switch(state)
-    {
+    switch(state) {
       case state_first_start:
         state = (c == START_BYTE1) ? state_second_start : state_first_start;
         break;
@@ -99,8 +95,7 @@ bool syslinkReceive(struct syslinkPacket *packet)
           state = state_cksum1;
         break;
       case state_data:
-        if (step < SYSLINK_MTU)
-        {
+        if (step < SYSLINK_MTU) {
           packet->data[step] = c;
           cksum_a += c;
           cksum_b += cksum_a;
@@ -111,12 +106,9 @@ bool syslinkReceive(struct syslinkPacket *packet)
         }
         break;
       case state_cksum1:
-        if (c == cksum_a)
-        {
+        if (c == cksum_a) {
           state = state_cksum2;
-        }
-        else
-        {  // Wrong checksum
+        } else {  // Wrong checksum
           state = state_first_start;
 #ifdef SYSLINK_CKSUM_MON
           if (NRF_GPIO->OUT & (1<<LED_PIN))
@@ -127,13 +119,10 @@ bool syslinkReceive(struct syslinkPacket *packet)
         }
         break;
       case state_cksum2:
-        if (c == cksum_b)
-        {
+        if (c == cksum_b) {
           packet->length = length;
           state = state_done;
-        }
-        else
-        {  // Wrong checksum
+        } else {  // Wrong checksum
           state = state_first_start;
           step = 0;
 #ifdef SYSLINK_CKSUM_MON
@@ -152,11 +141,9 @@ bool syslinkReceive(struct syslinkPacket *packet)
   return (state == state_done);
 }
 
-bool syslinkSend(struct syslinkPacket *packet)
-{
-  uint8_t cksum_a=0;
-  uint8_t cksum_b=0;
-  int i;
+bool syslinkSend(struct syslinkPacket *packet) {
+  uint8_t cksum_a = 0;
+  uint8_t cksum_b = 0;
 
   uartPuts(START);
 
@@ -168,8 +155,7 @@ bool syslinkSend(struct syslinkPacket *packet)
   cksum_a += packet->length;
   cksum_b += cksum_a;
 
-  for (i=0; i < packet->length; i++)
-  {
+  for (int i = 0; i < packet->length; i++) {
     uartPutc(packet->data[i]);
     cksum_a += packet->data[i];
     cksum_b += cksum_a;

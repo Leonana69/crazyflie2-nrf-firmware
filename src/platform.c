@@ -99,9 +99,9 @@ int platformInitByDeviceType() {
     pmConfig.hasVbatSink = false;
   } else if (0 == strcmp(deviceType, "POD0")) {
     // TODO: fix for POD
-    has_rfx2411n = true;
-    pmConfig.vbatFactor = ((3.0 / 1.0) / (100.0 / (100.0 + 510.0)));
-    pmConfig.adcPrescalingSetup = ADC_CONFIG_INPSEL_AnalogInputTwoThirdsPrescaling;
+    has_rfx2411n = false;
+    pmConfig.vbatFactor = ((3.0 / 1.0) / (100.0 / (100.0 + 100.0)));
+    pmConfig.adcPrescalingSetup = ADC_CONFIG_INPSEL_AnalogInputOneThirdPrescaling;
     pmConfig.ticksBetweenAdcMeasurement = 10;
     pmConfig.hasCharger = false;
     pmConfig.hasVbatSink = false;

@@ -121,7 +121,7 @@ int main() {
   pmInit();
 
   if ((NRF_POWER->GPREGRET&0x01) == 0) {
-		  pmSetState(pmSysRunning);
+		pmSetState(pmSysRunning);
   }
 
   LED_ON();
