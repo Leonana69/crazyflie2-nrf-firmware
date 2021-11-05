@@ -3,8 +3,6 @@
 
 CLOAD_SCRIPT ?= python3 ./cfloader.py
 
-POD  ?= 1
-
 S110 ?= 1     # SoftDevice flashed or not
 BLE  ?= 1     # BLE mode activated or not. If disabled, CRTP mode is active
 
@@ -58,10 +56,6 @@ endif
 
 ifeq ($(strip $(BLE)), 1)
 CFLAGS += -DBLE=1
-endif
-
-ifeq ($(strip $(POD)), 1)
-CFLAGS += -DFORCE_TYPE_POD
 endif
 
 OBJS += src/ble/ble.o
@@ -158,25 +152,13 @@ flash_s110: $(NRF_S110)/s110_nrf51822_7.3.0_softdevice.hex
                  -c "flash write_image erase s110/s110_nrf51822_7.3.0_softdevice.hex" \
                  -c "reset run" -c shutdown
 
-flash_mbs: bootloaders/nrf_mbs_v1.0.hex
+flash_mbs: bootloaders/nrf_mbs_cf21.hex
 	$(OPENOCD) -d2 -f $(OPENOCD_INTERFACE) $(OPENOCD_CMDS) -f $(OPENOCD_TARGET) -c init -c targets -c "reset halt" \
                  -c "flash write_image erase $^" -c "verify_image $^" -c "reset halt" \
 	               -c "mww 0x4001e504 0x01" -c "mww 0x10001014 0x3F000" \
 	               -c "reset run" -c shutdown
 
-flash_cload: bootloaders/cload_nrf_v1.0.hex
-	$(OPENOCD) -d2 -f $(OPENOCD_INTERFACE) $(OPENOCD_CMDS) -f $(OPENOCD_TARGET) -c init -c targets -c "reset halt" \
-                 -c "flash write_image erase $^" -c "verify_image $^" -c "reset halt" \
-	               -c "mww 0x4001e504 0x01" -c "mww 0x10001014 0x3F000" \
-	               -c "mww 0x4001e504 0x01" -c "mww 0x10001080 0x3A000" -c "reset run" -c shutdown
-
-flash_mbs_21: bootloaders/nrf_mbs_cf21.hex
-	$(OPENOCD) -d2 -f $(OPENOCD_INTERFACE) $(OPENOCD_CMDS) -f $(OPENOCD_TARGET) -c init -c targets -c "reset halt" \
-                 -c "flash write_image erase $^" -c "verify_image $^" -c "reset halt" \
-	               -c "mww 0x4001e504 0x01" -c "mww 0x10001014 0x3F000" \
-	               -c "reset run" -c shutdown
-
-flash_cload_21: bootloaders/cload_nrf_cf21.hex
+flash_cload: bootloaders/cload_nrf_cf21.hex
 	$(OPENOCD) -d2 -f $(OPENOCD_INTERFACE) $(OPENOCD_CMDS) -f $(OPENOCD_TARGET) -c init -c targets -c "reset halt" \
                  -c "flash write_image erase $^" -c "verify_image $^" -c "reset halt" \
 	               -c "mww 0x4001e504 0x01" -c "mww 0x10001014 0x3F000" \
@@ -210,21 +192,11 @@ else
 	@echo "Only S110 build can be bootloaded. Launch build and cload with S110=1"
 endif
 
-
-factory_reset:
+factory_reset_21:
 	make mass_erase
 ifeq ($(strip $(S110)),1)
 	make flash_s110
 	make flash_mbs
 	make flash_cload
-endif
-	make flash
-
-factory_reset_21:
-	make mass_erase
-ifeq ($(strip $(S110)),1)
-	make flash_s110
-	make flash_mbs_21
-	make flash_cload_21
 endif
 	make flash

@@ -60,11 +60,6 @@ int platformInitByDeviceType() {
   static char deviceType[PLATFORM_DEVICE_TYPE_MAX_LEN];
 
   platformGetDeviceTypeString(deviceTypeString);
-
-#ifdef FORCE_TYPE_POD
-  strncpy(deviceTypeString, "0;POD0;R=D", 11);
-#endif
-
   if (platformParseDeviceTypeString(deviceTypeString, deviceType))
     return 1;
 
