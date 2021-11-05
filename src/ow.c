@@ -34,8 +34,7 @@
 
 #define USE_OW_IO_PULLUP
 
-void owInit(void)
-{
+void owInit(void) {
 #ifdef USE_OW_IO_PULLUP
   NRF_GPIO->PIN_CNF[OW_PULLUP_PIN] = (GPIO_PIN_CNF_SENSE_Disabled << GPIO_PIN_CNF_SENSE_Pos)
                                     | (GPIO_PIN_CNF_DRIVE_S0H1 << GPIO_PIN_CNF_DRIVE_Pos)

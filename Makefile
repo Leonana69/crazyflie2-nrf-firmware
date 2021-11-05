@@ -1,10 +1,13 @@
 #Put your personal build config in config.mk and DO NOT COMMIT IT!
 -include config.mk
 
-CLOAD_SCRIPT ?= python3 -m cfloader
+CLOAD_SCRIPT ?= python3 ./cfloader.py
+
+POD  ?= 1
 
 S110 ?= 1     # SoftDevice flashed or not
 BLE  ?= 1     # BLE mode activated or not. If disabled, CRTP mode is active
+
 DEBUG_PRINT_ON_SEGGER_RTT ?= 0 # debug prints
 
 PLATFORM ?= cf2
@@ -55,6 +58,10 @@ endif
 
 ifeq ($(strip $(BLE)), 1)
 CFLAGS += -DBLE=1
+endif
+
+ifeq ($(strip $(POD)), 1)
+CFLAGS += -DFORCE_TYPE_POD
 endif
 
 OBJS += src/ble/ble.o

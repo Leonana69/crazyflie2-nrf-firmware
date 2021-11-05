@@ -49,7 +49,7 @@
 
 #include "ble_crazyflies.h"
 
-extern void  initialise_monitor_handles(void);
+extern void initialise_monitor_handles(void);
 extern int ble_init(void);
 
 #ifndef SEMIHOSTING
@@ -65,7 +65,7 @@ extern int ble_init(void);
 
 static void mainloop(void);
 
-#if BLE==0
+#if BLE == 0
 #undef BLE
 #endif
 
@@ -82,22 +82,20 @@ static void handleBootloaderCmd(struct esbPacket_s *packet);
 static void disableBle();
 
 static int stmStartTime = 0;
-int main()
-{
+int main() {
   // Stop early if the platform is not supported
-  if (platformInit() != 0) {
+  if (platformInit() != 0)
     while(1);
-  }
 
   debugInit();
   systickInit();
   memoryInit();
 
-  if (bleEnabled) {
+  if (bleEnabled)
     ble_init();
-  } else {
+  else {
     NRF_CLOCK->TASKS_HFCLKSTART = 1UL;
-    while(!NRF_CLOCK->EVENTS_HFCLKSTARTED);
+    while (!NRF_CLOCK->EVENTS_HFCLKSTARTED);
   }
 
 #ifdef SEMIHOSTING
@@ -110,13 +108,12 @@ int main()
   while(!NRF_CLOCK->EVENTS_LFCLKSTARTED);
 
   LED_INIT();
-  if ((NRF_POWER->GPREGRET & 0x80) && ((NRF_POWER->GPREGRET&(0x3<<1))==0)) {
+  if ((NRF_POWER->GPREGRET & 0x80) && ((NRF_POWER->GPREGRET & (0x3 << 1)) == 0))
     buttonInit(buttonShortPress);
-  } else {
+  else
     buttonInit(buttonIdle);
-  }
 
-  if  (NRF_POWER->GPREGRET & 0x20) {
+  if (NRF_POWER->GPREGRET & 0x20) {
     boottedFromBootloader = true;
     NRF_POWER->GPREGRET &= ~0x20;
   }
@@ -145,13 +142,12 @@ int main()
 
   // The main loop should never end
   // TODO see if we should shut-off the system there?
-  while(1);
+  while (1);
 
   return 0;
 }
 
-void mainloop()
-{
+void mainloop() {
   static struct syslinkPacket slRxPacket;
   static struct syslinkPacket slTxPacket;
   static EsbPacket esbRxPacket;
@@ -163,8 +159,7 @@ void mainloop()
   static bool broadcast;
   static bool p2p;
 
-  while(1)
-  {
+  while (1) {
 
     if (bleEnabled) {
       if ((esbReceived == false) && bleCrazyfliesIsPacketReceived()) {
@@ -178,8 +173,7 @@ void mainloop()
 
 #ifndef CONT_WAVE_TEST
 
-    if ((esbReceived == false) && esbIsRxPacket())
-    {
+    if ((esbReceived == false) && esbIsRxPacket()) {
       EsbPacket* packet = esbGetRxPacket();
       //Store RSSI here so that we can send it to STM later
       // Todo investigate if we can not just simply link this to the packet itself or find a way to separate this due to P2P
@@ -201,21 +195,16 @@ void mainloop()
       disableBle();
     }
 
-    if (esbReceived)
-    {
+    if (esbReceived) {
       EsbPacket* packet = &esbRxPacket;
       esbReceived = false;
 
-      if((packet->size >= 4) && (packet->data[0]&0xf3) == 0xf3 && (packet->data[1]==0x03))
-      {
+      if((packet->size >= 4) && (packet->data[0] & 0xf3) == 0xf3 && (packet->data[1] == 0x03)) {
         handleRadioCmd(packet);
       }
-      else if ((packet->size >2) && (packet->data[0]&0xf3) == 0xf3 && (packet->data[1]==0xfe))
-      {
+      else if ((packet->size >2) && (packet->data[0] & 0xf3) == 0xf3 && (packet->data[1] == 0xfe)) {
         handleBootloaderCmd(packet);
-      }
-      else
-      {
+      } else {
         if (p2p == false) {
           memcpy(slTxPacket.data, packet->data, packet->size);
           slTxPacket.length = packet->size;
@@ -241,13 +230,10 @@ void mainloop()
     }
 
     slReceived = syslinkReceive(&slRxPacket);
-    if (slReceived)
-    {
-      switch (slRxPacket.type)
-      {
+    if (slReceived) {
+      switch (slRxPacket.type) {
         case SYSLINK_RADIO_RAW:
-          if (esbCanTxPacket() && (slRxPacket.length < SYSLINK_MTU))
-          {
+          if (esbCanTxPacket() && (slRxPacket.length < SYSLINK_MTU)) {
             EsbPacket* packet = esbGetTxPacket();
 
             if (packet) {
@@ -270,8 +256,7 @@ void mainloop()
 
           break;
         case SYSLINK_RADIO_CHANNEL:
-          if(slRxPacket.length == 1)
-          {
+          if (slRxPacket.length == 1) {
             esbSetChannel(slRxPacket.data[0]);
 
             slTxPacket.type = SYSLINK_RADIO_CHANNEL;
@@ -281,8 +266,7 @@ void mainloop()
           }
           break;
         case SYSLINK_RADIO_DATARATE:
-          if(slRxPacket.length == 1)
-          {
+          if (slRxPacket.length == 1) {
             esbSetDatarate(slRxPacket.data[0]);
 
             slTxPacket.type = SYSLINK_RADIO_DATARATE;
@@ -292,7 +276,7 @@ void mainloop()
           }
           break;
         case SYSLINK_RADIO_CONTWAVE:
-          if(slRxPacket.length == 1) {
+          if (slRxPacket.length == 1) {
             esbSetContwave(slRxPacket.data[0]);
 
             slTxPacket.type = SYSLINK_RADIO_CONTWAVE;
@@ -302,8 +286,7 @@ void mainloop()
           }
           break;
         case SYSLINK_RADIO_ADDRESS:
-          if(slRxPacket.length == 5)
-          {
+          if (slRxPacket.length == 5) {
             uint64_t address = 0;
             memcpy(&address, &slRxPacket.data[0], 5);
             esbSetAddress(address);
@@ -315,8 +298,7 @@ void mainloop()
           }
           break;
         case SYSLINK_RADIO_POWER:
-          if(slRxPacket.length == 1)
-          {
+          if (slRxPacket.length == 1) {
             esbSetTxPowerDbm((int8_t)slRxPacket.data[0]);
 
             slTxPacket.type = SYSLINK_RADIO_POWER;
@@ -342,7 +324,7 @@ void mainloop()
             disableBle();
           }
           // Send the P2P packet immediately without buffer
-          esbSendP2PPacket(slRxPacket.data[0],&slRxPacket.data[1],slRxPacket.length-1);
+          esbSendP2PPacket(slRxPacket.data[0], &slRxPacket.data[1], slRxPacket.length-1);
           break;
         case SYSLINK_SYS_NRF_VERSION:{
           size_t len = strlen(V_STAG);
@@ -383,21 +365,21 @@ void mainloop()
         slTxPacket.type = SYSLINK_PM_BATTERY_STATE;
         slTxPacket.length = 9;
 
-        flags |= (pmIsCharging() == true)?0x01:0;
-        flags |= (pmUSBPower() == true)?0x02:0;
+        flags |= (pmIsCharging() == true) ? 0x01 : 0;
+        flags |= (pmUSBPower() == true) ? 0x02 : 0;
 
         slTxPacket.data[0] = flags;
 
         fdata = pmGetVBAT();
-        memcpy(slTxPacket.data+1, &fdata, sizeof(float));
+        memcpy(slTxPacket.data + 1, &fdata, sizeof(float));
 
         fdata = pmGetISET();
-        memcpy(slTxPacket.data+1+4, &fdata, sizeof(float));
+        memcpy(slTxPacket.data + 1 + 4, &fdata, sizeof(float));
 
 #ifdef PM_SYSLINK_INCLUDE_TEMP
         fdata = pmGetTemp();
         slTxPacket.length += 4;
-        memcpy(slTxPacket.data+1+8, &fdata, sizeof(float));
+        memcpy(slTxPacket.data + 1 + 8, &fdata, sizeof(float));
 #endif
         syslinkSend(&slTxPacket);
       }
@@ -418,26 +400,19 @@ void mainloop()
 
     // Button event handling
     ButtonEvent be = buttonGetState();
-    if ((pmGetState() != pmSysOff) && (be == buttonShortPress))
-    {
+    if ((pmGetState() != pmSysOff) && (be == buttonShortPress)) {
       // Request graceful shutdown from STM32, will timeout and shutdown
       // if no response is received.
       shutdownSendRequest();
-    }
-    else if ((pmGetState() == pmSysOff) && (be == buttonShortPress))
-    {
+    } else if ((pmGetState() == pmSysOff) && (be == buttonShortPress)) {
       //Normal boot
       pmSysBootloader(false);
       pmSetState(pmSysRunning);
-    }
-    else if ((pmGetState() == pmSysOff) && boottedFromBootloader)
-    {
+    } else if ((pmGetState() == pmSysOff) && boottedFromBootloader) {
       //Normal boot after bootloader
       pmSysBootloader(false);
       pmSetState(pmSysRunning);
-    }
-    else if ((pmGetState() == pmSysOff) && (be == buttonLongPress))
-    {
+    } else if ((pmGetState() == pmSysOff) && (be == buttonLongPress)) {
       //stm bootloader
       pmSysBootloader(true);
       pmSetState(pmSysRunning);
@@ -456,8 +431,7 @@ void mainloop()
 #define RADIO_CTRL_SET_DATARATE 2
 #define RADIO_CTRL_SET_POWER 3
 
-static void handleRadioCmd(struct esbPacket_s *packet)
-{
+static void handleRadioCmd(struct esbPacket_s *packet) {
   switch (packet->data[2]) {
     case RADIO_CTRL_SET_CHANNEL:
       esbSetChannel(packet->data[3]);
@@ -482,8 +456,7 @@ static void handleRadioCmd(struct esbPacket_s *packet)
 #define BOOTLOADER_CMD_LED_ON     0x05
 #define BOOTLOADER_CMD_LED_OFF    0x06
 
-static void handleBootloaderCmd(struct esbPacket_s *packet)
-{
+static void handleBootloaderCmd(struct esbPacket_s *packet) {
   static bool resetInit = false;
   static struct esbPacket_s txpk;
 

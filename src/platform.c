@@ -3,15 +3,14 @@
 #include <string.h>
 #include <nrf.h>
 
-static const char *defaultDeviceType = "0;CF20;R=D";
+static const char *defaultDeviceType = "0;POD0;R=D";
 
 static char *deviceTypeStringLocation = (void*)0x3FFE0;
 
 static bool has_rfx2411n = false;
 static PmConfig pmConfig;
 
-void platformGetDeviceTypeString(char *deviceTypeString)
-{
+void platformGetDeviceTypeString(char *deviceTypeString) {
   if (deviceTypeStringLocation[0] == 0xffu) {
     strncpy(deviceTypeString, defaultDeviceType, 32);
     deviceTypeString[32] = 0;
@@ -37,17 +36,16 @@ static int platformParseDeviceTypeString(char* deviceTypeString, char* deviceTyp
   
   // first token is the version, must be "0"
   tok = strtok_r(deviceTypeString, ";", &state);
-  if (tok == NULL || strcmp(tok, "0")) {
+  if (tok == NULL || strcmp(tok, "0"))
     return 1;
-  }
 
   // Second token is the platform name
   tok = strtok_r(NULL, ";", &state);
-  if (tok == NULL) {
+  if (tok == NULL)
     return 1;
-  }
+
   strncpy(deviceType, tok, PLATFORM_DEVICE_TYPE_MAX_LEN);
-  deviceType[PLATFORM_DEVICE_TYPE_MAX_LEN-1] = '\0';
+  deviceType[PLATFORM_DEVICE_TYPE_MAX_LEN - 1] = '\0';
 
   // Next tokens are KEY=VALUE pairs, ignored for now
 
@@ -62,9 +60,14 @@ int platformInitByDeviceType() {
   static char deviceType[PLATFORM_DEVICE_TYPE_MAX_LEN];
 
   platformGetDeviceTypeString(deviceTypeString);
-  if (platformParseDeviceTypeString(deviceTypeString, deviceType) != 0) {
+
+#ifdef FORCE_TYPE_POD
+  strncpy(deviceTypeString, "0;POD0;R=D", 11);
+#endif
+
+  if (platformParseDeviceTypeString(deviceTypeString, deviceType))
     return 1;
-  }
+
 
   if (0 == strcmp(deviceType, "CF20")) {
     has_rfx2411n = false;
@@ -73,7 +76,6 @@ int platformInitByDeviceType() {
     pmConfig.ticksBetweenAdcMeasurement = 5;
     pmConfig.hasCharger = true;
     pmConfig.hasVbatSink = true;
-
   } else if (0 == strcmp(deviceType, "CF21")) {
     has_rfx2411n = true;
     pmConfig.vbatFactor = ((3.0 / 2.0) / (100.0 / (100.0 + 200.0)));
@@ -81,7 +83,6 @@ int platformInitByDeviceType() {
     pmConfig.ticksBetweenAdcMeasurement = 5;
     pmConfig.hasCharger = true;
     pmConfig.hasVbatSink = true;
-
   } else if (0 == strcmp(deviceType, "RR10")) {
     has_rfx2411n = true;
     pmConfig.vbatFactor = ((3.0 / 1.0) / (110.0 / (110.0 + 510.0)));
@@ -89,7 +90,6 @@ int platformInitByDeviceType() {
     pmConfig.ticksBetweenAdcMeasurement = 10;
     pmConfig.hasCharger = false;
     pmConfig.hasVbatSink = false;
-
   } else if ((0 == strcmp(deviceType, "RZ10")) || (0 == strcmp(deviceType, "CB10"))) {
     has_rfx2411n = true;
     pmConfig.vbatFactor = ((3.0 / 1.0) / (110.0 / (110.0 + 510.0)));
@@ -97,7 +97,14 @@ int platformInitByDeviceType() {
     pmConfig.ticksBetweenAdcMeasurement = 10;
     pmConfig.hasCharger = false;
     pmConfig.hasVbatSink = false;
-
+  } else if (0 == strcmp(deviceType, "POD0")) {
+    // TODO: fix for POD
+    has_rfx2411n = true;
+    pmConfig.vbatFactor = ((3.0 / 1.0) / (100.0 / (100.0 + 510.0)));
+    pmConfig.adcPrescalingSetup = ADC_CONFIG_INPSEL_AnalogInputTwoThirdsPrescaling;
+    pmConfig.ticksBetweenAdcMeasurement = 10;
+    pmConfig.hasCharger = false;
+    pmConfig.hasVbatSink = false;
   } else {
     has_rfx2411n = false;
     pmConfig.vbatFactor = ((3.0 / 2.0) / (100.0 / (100.0 + 200.0)));
@@ -114,7 +121,6 @@ bool platformHasRfx2411n() {
   return has_rfx2411n;
 }
 
-const PmConfig* platformGetPmConfig()
-{
+const PmConfig* platformGetPmConfig() {
   return &pmConfig;
 }

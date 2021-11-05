@@ -50,7 +50,7 @@ extern int bleEnabled;
 static PmConfig const *pmConfig;
 static PmState state;
 static PmState targetState;
-static bool systemBootloader=false;
+static bool systemBootloader = false;
 
 typedef enum {adcVBAT, adcISET} ADCState;
 
@@ -60,8 +60,7 @@ static float vBat;
 static float iSet;
 static float temp;
 
-void pmInit()
-{
+void pmInit() {
   state = pmSysOff; //When NRF starts, the system is OFF
   targetState = state;
 
@@ -93,8 +92,7 @@ bool pmIsCharging(void) {
 	if (pgood)
 }*/
 
-static void pmStartAdc(ADCState state)
-{
+static void pmStartAdc(ADCState state) {
 	if (state == adcVBAT) {
 	    NRF_ADC->CONFIG = AIN_VBAT << ADC_CONFIG_PSEL_Pos |
 	        ADC_CONFIG_REFSEL_VBG << ADC_CONFIG_REFSEL_Pos |
@@ -113,8 +111,7 @@ static void pmStartAdc(ADCState state)
   NRF_ADC->TASKS_START = 0x01;
 }
 
-static void pmNrfPower(bool enable)
-{
+static void pmNrfPower(bool enable) {
   if (!enable) {
     //stop NRF
     LED_OFF();
@@ -123,9 +120,8 @@ static void pmNrfPower(bool enable)
       nrf_gpio_pin_clear(RADIO_PA_RX_EN);
       nrf_gpio_pin_clear(RADIO_PA_MODE);
       nrf_gpio_pin_clear(RADIO_PA_ANT_SW);
-    } else {
+    } else
       nrf_gpio_pin_clear(RADIO_PAEN_PIN);
-    }
     // Disable 1-wire pull-up
     nrf_gpio_pin_clear(OW_PULLUP_PIN);
     // CE, EN1 and EN2 externally pulled low. Put low to not draw any current.
@@ -136,24 +132,21 @@ static void pmNrfPower(bool enable)
     nrf_gpio_cfg_input(PM_VBAT_SINK_PIN, NRF_GPIO_PIN_NOPULL);
     NRF_POWER->GPREGRET |= 0x01; // Workaround for not being able to determine reset reason...
 
-    if (bleEnabled) {
+    if (bleEnabled)
       sd_power_system_off();
-    } else {
+    else
       NRF_POWER->SYSTEMOFF = 1UL;
-    }
 
-    while(1);
-  } else {
+    while (1);
+  } else
     nrf_gpio_pin_clear(PM_VCCEN_PIN);
-  }
 }
 
 static void pmDummy(bool enable) {
   ;
 }
 
-static void pmPowerSystem(bool enable)
-{
+static void pmPowerSystem(bool enable) {
   if (enable) {
     NRF_GPIO->PIN_CNF[STM_NRST_PIN] = (GPIO_PIN_CNF_SENSE_Disabled << GPIO_PIN_CNF_SENSE_Pos)
                                       | (GPIO_PIN_CNF_DRIVE_S0D1 << GPIO_PIN_CNF_DRIVE_Pos)
@@ -168,8 +161,7 @@ static void pmPowerSystem(bool enable)
   }
 }
 
-static void pmSysBoot(bool enable)
-{
+static void pmSysBoot(bool enable) {
   if (enable) {
     nrf_gpio_cfg_output(STM_BOOT0_PIN);
 
@@ -187,8 +179,7 @@ static void pmSysBoot(bool enable)
   }
 }
 
-static void pmRunSystem(bool enable)
-{
+static void pmRunSystem(bool enable) {
   if (enable) {
     // Release the reset pin!
     nrf_gpio_pin_set(STM_NRST_PIN);
@@ -264,13 +255,11 @@ static void pmRunSystem(bool enable)
 }
 
 /* User API to set and get power state */
-void pmSetState(PmState newState)
-{
+void pmSetState(PmState newState) {
   targetState = newState;
 }
 
-PmState pmGetState()
-{
+PmState pmGetState() {
   return state;
 }
 
@@ -286,8 +275,7 @@ float pmGetTemp(void) {
   return temp;
 }
 
-void pmSysBootloader(bool enable)
-{
+void pmSysBootloader(bool enable) {
   systemBootloader = enable;
 }
 
@@ -308,7 +296,7 @@ void pmProcess() {
   static int lastTick = 0;
   static int lastAdcTick = 0;
 
-  int delay = (targetState>state)?statesFunctions[state].delayUp:statesFunctions[state].delay;
+  int delay = (targetState > state) ? statesFunctions[state].delayUp : statesFunctions[state].delay;
 
   if (systickGetTick() - lastTick > delay) {
     lastTick = systickGetTick();
@@ -327,8 +315,7 @@ void pmProcess() {
   }
 
   // VBAT sampling can't be done to often or it will affect the reading, ~100Hz is OK.
-  if (systickGetTick() - lastAdcTick > pmConfig->ticksBetweenAdcMeasurement && !NRF_ADC->BUSY)
-  {
+  if (systickGetTick() - lastAdcTick > pmConfig->ticksBetweenAdcMeasurement && !NRF_ADC->BUSY) {
     uint16_t rawValue = NRF_ADC->RESULT;
     lastAdcTick = systickGetTick();
 
@@ -353,21 +340,15 @@ void pmProcess() {
 
 #ifndef DISABLE_CHARGE_TEMP_CONTROL
   // Check that environmental temp is OK for charging
-  if (pmConfig->hasCharger && NRF_TEMP->EVENTS_DATARDY)
-  {
+  if (pmConfig->hasCharger && NRF_TEMP->EVENTS_DATARDY) {
     temp = (float)(NRF_TEMP->TEMP / 4.0);
-    if (temp < PM_CHARGE_MIN_TEMP || temp > PM_CHARGE_MAX_TEMP)
-    {
+    if (temp < PM_CHARGE_MIN_TEMP || temp > PM_CHARGE_MAX_TEMP) {
       // Disable charging
       nrf_gpio_pin_set(PM_CHG_EN);
-//      LED_OFF();
-    }
-    else if (temp > PM_CHARGE_MIN_TEMP + PM_CHARE_HYSTERESIS  &&
-             temp < PM_CHARGE_MAX_TEMP - PM_CHARE_HYSTERESIS)
-    {
+    } else if (temp > PM_CHARGE_MIN_TEMP + PM_CHARE_HYSTERESIS  &&
+             temp < PM_CHARGE_MAX_TEMP - PM_CHARE_HYSTERESIS) {
       // Enable charging
       nrf_gpio_pin_clear(PM_CHG_EN);
-//      LED_ON();
     }
   }
 #endif

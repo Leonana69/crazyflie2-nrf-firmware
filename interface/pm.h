@@ -25,9 +25,19 @@
 #define __PM_H__
 #include <stdbool.h>
 
-typedef enum {pmAllOff=0, pmSysOff=1, pmSysPowered=2, pmSysBootSetup=3, pmSysRunning=4} PmState;
+typedef enum {
+  pmAllOff = 0,
+  pmSysOff = 1,
+  pmSysPowered = 2,
+  pmSysBootSetup = 3,
+  pmSysRunning = 4
+} PmState;
 
-typedef enum {chgOff=0, chgCharging=1, chgCharged=2} ChgState;
+typedef enum {
+  chgOff = 0,
+  chgCharging = 1,
+  chgCharged = 2
+} ChgState;
 
 void pmInit();
 

@@ -27,16 +27,13 @@
 
 static unsigned int tick = 0;
 
-//void RTC1_IRQHandler()
-void TIMER2_IRQHandler()
-{
+void TIMER2_IRQHandler() {
   tick++;
   //NRF_RTC1->EVENTS_TICK = 0;
   NRF_TIMER2->EVENTS_COMPARE[0] = 0;
 }
 
-void systickInit()
-{
+void systickInit() {
 //  NRF_RTC1->PRESCALER = 327; //100Hz systick
 //  NRF_RTC1->EVTENSET = RTC_EVTENSET_TICK_Msk;
 //  NRF_RTC1->INTENSET = RTC_INTENSET_TICK_Msk;
@@ -48,16 +45,15 @@ void systickInit()
 
   NRF_TIMER2->PRESCALER = 4;
   NRF_TIMER2->CC[0] = 1000;
-  NRF_TIMER2->SHORTS = 1UL<<TIMER_SHORTS_COMPARE0_CLEAR_Pos;
-  NRF_TIMER2->INTENSET = (1UL << TIMER_INTENSET_COMPARE0_Pos);
+  NRF_TIMER2->SHORTS = 1UL << TIMER_SHORTS_COMPARE0_CLEAR_Pos;
+  NRF_TIMER2->INTENSET = 1UL << TIMER_INTENSET_COMPARE0_Pos;
   NVIC_SetPriority(TIMER2_IRQn, 3);
   NVIC_EnableIRQ(TIMER2_IRQn);
 
   NRF_TIMER2->TASKS_START = 1;
 }
 
-unsigned int systickGetTick()
-{
+unsigned int systickGetTick() {
   return tick;
 }
 

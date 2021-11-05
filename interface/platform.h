@@ -6,8 +6,7 @@
 #define PLATFORM_DEVICE_TYPE_STRING_MAX_LEN 33
 #define PLATFORM_DEVICE_TYPE_MAX_LEN 31
 
-typedef struct
-{
+typedef struct {
   float    vbatFactor;
   uint32_t adcPrescalingSetup;
   uint32_t ticksBetweenAdcMeasurement;

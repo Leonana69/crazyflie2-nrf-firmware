@@ -27,7 +27,7 @@
 #include "pm.h"
 #include "systick.h"
 
-#define TIMEOUT_TICKS 1000 // 100 ms
+#define TIMEOUT_TICKS 200
 
 static enum {
   nothingTodo = 0,
@@ -37,15 +37,13 @@ static enum {
 
 static unsigned int requestSentTicks;
 
-void shutdownSendRequest()
-{
+void shutdownSendRequest() {
   struct syslinkPacket slTxPacket = {
     .type = SYSLINK_PM_SHUTDOWN_REQUEST,
   };
 
-  if (state == shutdownRequested) {
+  if (state == shutdownRequested)
     return;
-  }
 
   syslinkSend(&slTxPacket);
 
@@ -53,19 +51,15 @@ void shutdownSendRequest()
   requestSentTicks = systickGetTick();
 }
 
-void shutdownReceivedAck()
-{
-  if (state != shutdownRequested) {
+void shutdownReceivedAck() {
+  if (state != shutdownRequested)
     return;
-  }
 
   state = shutdownApproved;
 }
 
-void shutdownProcess()
-{
-  switch (state)
-  {
+void shutdownProcess() {
+  switch (state) {
     case nothingTodo: break;
 
     case shutdownApproved:
