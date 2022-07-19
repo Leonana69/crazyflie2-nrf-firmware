@@ -21,7 +21,7 @@ GDB=$(CROSS_COMPILE)gdb
 
 OPENOCD           ?= openocd
 OPENOCD_DIR       ?=
-OPENOCD_INTERFACE ?= $(OPENOCD_DIR)interface/stlink-v2.cfg
+OPENOCD_INTERFACE ?= $(OPENOCD_DIR)interface/stlink.cfg
 OPENOCD_TARGET    ?= target/nrf51.cfg
 OPENOCD_CMDS      ?=
 
